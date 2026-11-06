@@ -7,5 +7,5 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     chmod +x app.py && \
     pip install -r requirements.txt
-
+EXPOSE 3000
 CMD ["python", "app.py"]
