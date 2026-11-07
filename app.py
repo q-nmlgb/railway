@@ -22,9 +22,9 @@ UUID = os.environ.get('UUID', '20e6e496-cf19-45c8-b883-14f5e11cd9f1')  # UUID,�
 NEZHA_SERVER = os.environ.get('NEZHA_SERVER', '')      # 哪吒面板域名或ip, v1格式: nezha.xxx.com:8008, v0格式: nezha.xxx.com
 NEZHA_PORT = os.environ.get('NEZHA_PORT', '')          # v1哪吒请留空, v0哪吒的agent通信端口,自动匹配tls
 NEZHA_KEY = os.environ.get('NEZHA_KEY', '')            # v1哪吒的NZ_CLIENT_SECRET或v0哪吒agent密钥
-ARGO_DOMAIN = os.environ.get('ARGO_DOMAIN', '')        # Argo固定隧道域名,留空即使用临时隧道
-ARGO_AUTH = os.environ.get('ARGO_AUTH', '')            # Argo固定隧道密钥,留空即使用临时隧道
-ARGO_PORT = int(os.environ.get('ARGO_PORT', '8001'))   # Argo端口,使用固定隧道token需在cloudflare后台设置端口和这里一致
+RGO_DOMAIN = os.environ.get('RGO_DOMAIN', '')        # Argo固定隧道域名,留空即使用临时隧道
+RGO_AUTH = os.environ.get('RGO_AUTH', '')            # Argo固定隧道密钥,留空即使用临时隧道
+RGO_PORT = int(os.environ.get('RGO_PORT', '8001'))   # Argo端口,使用固定隧道token需在cloudflare后台设置端口和这里一致
 CFIP = os.environ.get('CFIP', 'spring.io')             # 优选ip或优选域名
 CFPORT = int(os.environ.get('CFPORT', '443'))          # 优选ip或优选域名对应端口
 NAME = os.environ.get('NAME', '')                      # 节点名称
@@ -185,23 +185,23 @@ def authorize_files(file_paths):
 
 # Configure Argo tunnel
 def argo_type():
-    if not ARGO_AUTH or not ARGO_DOMAIN:
-        print("ARGO_DOMAIN or ARGO_AUTH variable is empty, use quick tunnels")
+    if not RGO_AUTH or not RGO_DOMAIN:
+        print("RGO_DOMAIN or RGO_AUTH variable is empty, use quick tunnels")
         return
 
-    if "TunnelSecret" in ARGO_AUTH:
+    if "TunnelSecret" in RGO_AUTH:
         with open(os.path.join(FILE_PATH, 'tunnel.json'), 'w') as f:
-            f.write(ARGO_AUTH)
+            f.write(RGO_AUTH)
         
-        tunnel_id = ARGO_AUTH.split('"')[11]
+        tunnel_id = RGO_AUTH.split('"')[11]
         tunnel_yml = f"""
 tunnel: {tunnel_id}
 credentials-file: {os.path.join(FILE_PATH, 'tunnel.json')}
 protocol: http2
 
 ingress:
-  - hostname: {ARGO_DOMAIN}
-    service: http://localhost:{ARGO_PORT}
+  - hostname: {RGO_DOMAIN}
+    service: http://localhost:{RGO_PORT}
     originRequest:
       noTLSVerify: true
   - service: http_status:404
@@ -209,7 +209,7 @@ ingress:
         with open(os.path.join(FILE_PATH, 'tunnel.yml'), 'w') as f:
             f.write(tunnel_yml)
     else:
-        print("Use token connect to tunnel,please set the {ARGO_PORT} in cloudflare")
+        print("Use token connect to tunnel,please set the {RGO_PORT} in cloudflare")
 
 # Execute shell command and return output
 def exec_cmd(command):
@@ -302,7 +302,7 @@ uuid: {UUID}"""
 
         "inbounds": [{
 
-            "port": ARGO_PORT,
+            "port": RGO_PORT,
 
             "protocol": "vless",
 
@@ -566,12 +566,12 @@ uuid: {UUID}"""
     
     # Run cloudflared
     if os.path.exists(os.path.join(FILE_PATH, 'bot')):
-        if re.match(r'^[A-Z0-9a-z=]{120,250}$', ARGO_AUTH):
-            args = f"tunnel --edge-ip-version auto --no-autoupdate --protocol http2 run --token {ARGO_AUTH}"
-        elif "TunnelSecret" in ARGO_AUTH:
+        if re.match(r'^[A-Z0-9a-z=]{120,250}$', RGO_AUTH):
+            args = f"tunnel --edge-ip-version auto --no-autoupdate --protocol http2 run --token {RGO_AUTH}"
+        elif "TunnelSecret" in RGO_AUTH:
             args = f"tunnel --edge-ip-version auto --config {os.path.join(FILE_PATH, 'tunnel.yml')} run"
         else:
-            args = f"tunnel --edge-ip-version auto --no-autoupdate --protocol http2 --logfile {os.path.join(FILE_PATH, 'boot.log')} --loglevel info --url http://localhost:{ARGO_PORT}"
+            args = f"tunnel --edge-ip-version auto --no-autoupdate --protocol http2 --logfile {os.path.join(FILE_PATH, 'boot.log')} --loglevel info --url http://localhost:{RGO_PORT}"
         
         try:
             exec_cmd(f"nohup {os.path.join(FILE_PATH, 'bot')} {args} >/dev/null 2>&1 &")
@@ -587,30 +587,30 @@ uuid: {UUID}"""
 
 # Extract domains from cloudflared logs
 async def extract_domains():
-    argo_domain = None
+    RGO_DOMAIN = None
 
-    if ARGO_AUTH and ARGO_DOMAIN:
-        argo_domain = ARGO_DOMAIN
-        print(f'ARGO_DOMAIN: {argo_domain}')
-        await generate_links(argo_domain)
+    if RGO_AUTH and RGO_DOMAIN:
+        RGO_DOMAIN = RGO_DOMAIN
+        print(f'RGO_DOMAIN: {RGO_DOMAIN}')
+        await generate_links(RGO_DOMAIN)
     else:
         try:
             with open(boot_log_path, 'r') as f:
                 file_content = f.read()
             
             lines = file_content.split('\n')
-            argo_domains = []
+            RGO_DOMAINs = []
             
             for line in lines:
                 domain_match = re.search(r'https?://([^ ]*trycloudflare\.com)/?', line)
                 if domain_match:
                     domain = domain_match.group(1)
-                    argo_domains.append(domain)
+                    RGO_DOMAINs.append(domain)
             
-            if argo_domains:
-                argo_domain = argo_domains[0]
-                print(f'ArgoDomain: {argo_domain}')
-                await generate_links(argo_domain)
+            if RGO_DOMAINs:
+                RGO_DOMAIN = RGO_DOMAINs[0]
+                print(f'ArgoDomain: {RGO_DOMAIN}')
+                await generate_links(RGO_DOMAIN)
             else:
                 print('ArgoDomain not found, re-running bot to obtain ArgoDomain')
                 # Remove boot.log and restart bot
@@ -623,7 +623,7 @@ async def extract_domains():
                     pass
                 
                 time.sleep(1)
-                args = f'tunnel --edge-ip-version auto --no-autoupdate --protocol http2 --logfile {FILE_PATH}/boot.log --loglevel info --url http://localhost:{ARGO_PORT}'
+                args = f'tunnel --edge-ip-version auto --no-autoupdate --protocol http2 --logfile {FILE_PATH}/boot.log --loglevel info --url http://localhost:{RGO_PORT}'
                 exec_cmd(f'nohup {os.path.join(FILE_PATH, "bot")} {args} >/dev/null 2>&1 &')
                 print('bot is running.')
                 time.sleep(6)  # Wait 6 seconds
@@ -705,7 +705,7 @@ def send_telegram():
         print(f'Failed to send Telegram message: {e}')
 
 # Generate links and subscription content
-async def generate_links(argo_domain):
+async def generate_links(RGO_DOMAIN):
     meta_info = subprocess.run(['curl', '-sm', '5', '-H', 'User-Agent: Mozilla/5.0', 'https://api.ip.sb/geoip'], capture_output=True, text=True)
     geo_data = json.loads(meta_info.stdout)
     country_code = geo_data.get('country_code', 'Unknown')
@@ -716,14 +716,14 @@ async def generate_links(argo_domain):
         ISP = f"{country_code}_{isp}"
 
     time.sleep(2)
-    VMESS = {"v": "2", "ps": f"{ISP}", "add": CFIP, "port": CFPORT, "id": UUID, "aid": "0", "scy": "none", "net": "ws", "type": "none", "host": argo_domain, "path": "/vmess-argo?ed=2560", "tls": "tls", "sni": argo_domain, "alpn": "", "fp": "chrome"}
+    VMESS = {"v": "2", "ps": f"{ISP}", "add": CFIP, "port": CFPORT, "id": UUID, "aid": "0", "scy": "none", "net": "ws", "type": "none", "host": RGO_DOMAIN, "path": "/vmess-argo?ed=2560", "tls": "tls", "sni": RGO_DOMAIN, "alpn": "", "fp": "chrome"}
  
     list_txt = f"""
-vless://{UUID}@{CFIP}:{CFPORT}?encryption=none&security=tls&sni={argo_domain}&fp=chrome&type=ws&host={argo_domain}&path=%2Fvless-argo%3Fed%3D2560#{ISP}
+vless://{UUID}@{CFIP}:{CFPORT}?encryption=none&security=tls&sni={RGO_DOMAIN}&fp=chrome&type=ws&host={RGO_DOMAIN}&path=%2Fvless-argo%3Fed%3D2560#{ISP}
   
 vmess://{ base64.b64encode(json.dumps(VMESS).encode('utf-8')).decode('utf-8')}
 
-trojan://{UUID}@{CFIP}:{CFPORT}?security=tls&sni={argo_domain}&fp=chrome&type=ws&host={argo_domain}&path=%2Ftrojan-argo%3Fed%3D2560#{ISP}
+trojan://{UUID}@{CFIP}:{CFPORT}?security=tls&sni={RGO_DOMAIN}&fp=chrome&type=ws&host={RGO_DOMAIN}&path=%2Ftrojan-argo%3Fed%3D2560#{ISP}
     """
     
     with open(os.path.join(FILE_PATH, 'list.txt'), 'w', encoding='utf-8') as list_file:
