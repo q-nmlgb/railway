@@ -13,12 +13,12 @@ from threading import Thread
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 # Environment variables
-UPLOAD_URL = os.environ.get('UPLOAD_URL', '')          # 节点或订阅上传地址,只填写这个地址将上传节点,同时填写PROJECT_URL将上传订阅，例如：https://merge.serv00.net
+PLOAD_URL = os.environ.get('PLOAD_URL', '')          # 节点或订阅上传地址,只填写这个地址将上传节点,同时填写PROJECT_URL将上传订阅，例如：https://merge.serv00.net
 PROJECT_URL = os.environ.get('PROJECT_URL', '')        # 项目url,需要自动保活或自动上传订阅需要填写,例如：https://www.google.com,
-AUTO_ACCESS = os.environ.get('AUTO_ACCESS', 'false').lower() == 'true'  # false关闭自动保活, true开启自动保活，默认关闭
-FILE_PATH = os.environ.get('FILE_PATH', '.cache')      # 运行路径,sub.txt保存路径
-SUB_PATH = os.environ.get('SUB_PATH', 'sub')           # 订阅token,默认sub，例如：https://www.google.com/sub
-UUID = os.environ.get('UUID', '20e6e496-cf19-45c8-b883-14f5e11cd9f1')  # UUID,如使用哪吒v1,在不同的平台部署需要修改,否则会覆盖
+UTO_ACCESS = os.environ.get('UTO_ACCESS', 'false').lower() == 'true'  # false关闭自动保活, true开启自动保活，默认关闭
+ILE_PATH = os.environ.get('ILE_PATH', '.cache')      # 运行路径,sub.txt保存路径
+UB_PATH = os.environ.get('UB_PATH', 'sub')           # 订阅token,默认sub，例如：https://www.google.com/sub
+UID = os.environ.get('UID', '20e6e496-cf19-45c8-b883-14f5e11cd9f1')  # UID,如使用哪吒v1,在不同的平台部署需要修改,否则会覆盖
 NEZHA_SERVER = os.environ.get('NEZHA_SERVER', '')      # 哪吒面板域名或ip, v1格式: nezha.xxx.com:8008, v0格式: nezha.xxx.com
 NEZHA_PORT = os.environ.get('NEZHA_PORT', '')          # v1哪吒请留空, v0哪吒的agent通信端口,自动匹配tls
 NEZHA_KEY = os.environ.get('NEZHA_KEY', '')            # v1哪吒的NZ_CLIENT_SECRET或v0哪吒agent密钥
@@ -35,33 +35,33 @@ PORT = int(os.environ.get('SERVER_PORT') or os.environ.get('PORT') or 5000) # �
 # Create running folder
 def create_directory():
     print('\033c', end='')
-    if not os.path.exists(FILE_PATH):
-        os.makedirs(FILE_PATH)
-        print(f"{FILE_PATH} is created")
+    if not os.path.exists(ILE_PATH):
+        os.makedirs(ILE_PATH)
+        print(f"{ILE_PATH} is created")
     else:
-        print(f"{FILE_PATH} already exists")
+        print(f"{ILE_PATH} already exists")
 
 # Global variables
-npm_path = os.path.join(FILE_PATH, 'npm')
-php_path = os.path.join(FILE_PATH, 'php')
-web_path = os.path.join(FILE_PATH, 'web')
-bot_path = os.path.join(FILE_PATH, 'bot')
-sub_path = os.path.join(FILE_PATH, 'sub.txt')
-list_path = os.path.join(FILE_PATH, 'list.txt')
-boot_log_path = os.path.join(FILE_PATH, 'boot.log')
-config_path = os.path.join(FILE_PATH, 'config.json')
+npm_path = os.path.join(ILE_PATH, 'npm')
+php_path = os.path.join(ILE_PATH, 'php')
+web_path = os.path.join(ILE_PATH, 'web')
+bot_path = os.path.join(ILE_PATH, 'bot')
+UB_PATH = os.path.join(ILE_PATH, 'sub.txt')
+list_path = os.path.join(ILE_PATH, 'list.txt')
+boot_log_path = os.path.join(ILE_PATH, 'boot.log')
+config_path = os.path.join(ILE_PATH, 'config.json')
 
 # Delete nodes
 def delete_nodes():
     try:
-        if not UPLOAD_URL:
+        if not PLOAD_URL:
             return
 
-        if not os.path.exists(sub_path):
+        if not os.path.exists(UB_PATH):
             return
 
         try:
-            with open(sub_path, 'r') as file:
+            with open(UB_PATH, 'r') as file:
                 file_content = file.read()
         except:
             return None
@@ -73,7 +73,7 @@ def delete_nodes():
             return
 
         try:
-            requests.post(f"{UPLOAD_URL}/api/delete-nodes", 
+            requests.post(f"{PLOAD_URL}/api/delete-nodes", 
                           data=json.dumps({"nodes": nodes}),
                           headers={"Content-Type": "application/json"})
         except:
@@ -86,15 +86,15 @@ def delete_nodes():
 def cleanup_old_files():
     paths_to_delete = ['web', 'bot', 'npm', 'php', 'boot.log', 'list.txt']
     for file in paths_to_delete:
-        file_path = os.path.join(FILE_PATH, file)
+        ILE_PATH = os.path.join(ILE_PATH, file)
         try:
-            if os.path.exists(file_path):
-                if os.path.isdir(file_path):
-                    shutil.rmtree(file_path)
+            if os.path.exists(ILE_PATH):
+                if os.path.isdir(ILE_PATH):
+                    shutil.rmtree(ILE_PATH)
                 else:
-                    os.remove(file_path)
+                    os.remove(ILE_PATH)
         except Exception as e:
-            print(f"Error removing {file_path}: {e}")
+            print(f"Error removing {ILE_PATH}: {e}")
 
 class RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -104,9 +104,9 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(b'Hello World')
             
-        elif self.path == f'/{SUB_PATH}':
+        elif self.path == f'/{UB_PATH}':
             try:
-                with open(sub_path, 'rb') as f:
+                with open(UB_PATH, 'rb') as f:
                     content = f.read()
                 self.send_response(200)
                 self.send_header('Content-type', 'text/plain')
@@ -132,20 +132,20 @@ def get_system_architecture():
 
 # Download file based on architecture
 def download_file(file_name, file_url):
-    file_path = os.path.join(FILE_PATH, file_name)
+    ILE_PATH = os.path.join(ILE_PATH, file_name)
     try:
         response = requests.get(file_url, stream=True)
         response.raise_for_status()
         
-        with open(file_path, 'wb') as f:
+        with open(ILE_PATH, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
         
         print(f"Download {file_name} successfully")
         return True
     except Exception as e:
-        if os.path.exists(file_path):
-            os.remove(file_path)
+        if os.path.exists(ILE_PATH):
+            os.remove(ILE_PATH)
         print(f"Download {file_name} failed: {e}")
         return False
 
@@ -173,15 +173,15 @@ def get_files_for_architecture(architecture):
     return base_files
 
 # Authorize files with execute permission
-def authorize_files(file_paths):
-    for relative_file_path in file_paths:
-        absolute_file_path = os.path.join(FILE_PATH, relative_file_path)
-        if os.path.exists(absolute_file_path):
+def authorize_files(ILE_PATHs):
+    for relative_ILE_PATH in ILE_PATHs:
+        absolute_ILE_PATH = os.path.join(ILE_PATH, relative_ILE_PATH)
+        if os.path.exists(absolute_ILE_PATH):
             try:
-                os.chmod(absolute_file_path, 0o775)
-                print(f"Empowerment success for {absolute_file_path}: 775")
+                os.chmod(absolute_ILE_PATH, 0o775)
+                print(f"Empowerment success for {absolute_ILE_PATH}: 775")
             except Exception as e:
-                print(f"Empowerment failed for {absolute_file_path}: {e}")
+                print(f"Empowerment failed for {absolute_ILE_PATH}: {e}")
 
 # Configure Argo tunnel
 def argo_type():
@@ -190,13 +190,13 @@ def argo_type():
         return
 
     if "TunnelSecret" in RGO_AUTH:
-        with open(os.path.join(FILE_PATH, 'tunnel.json'), 'w') as f:
+        with open(os.path.join(ILE_PATH, 'tunnel.json'), 'w') as f:
             f.write(RGO_AUTH)
         
         tunnel_id = RGO_AUTH.split('"')[11]
         tunnel_yml = f"""
 tunnel: {tunnel_id}
-credentials-file: {os.path.join(FILE_PATH, 'tunnel.json')}
+credentials-file: {os.path.join(ILE_PATH, 'tunnel.json')}
 protocol: http2
 
 ingress:
@@ -206,7 +206,7 @@ ingress:
       noTLSVerify: true
   - service: http_status:404
 """
-        with open(os.path.join(FILE_PATH, 'tunnel.yml'), 'w') as f:
+        with open(os.path.join(ILE_PATH, 'tunnel.yml'), 'w') as f:
             f.write(tunnel_yml)
     else:
         print("Use token connect to tunnel,please set the {RGO_PORT} in cloudflare")
@@ -282,9 +282,9 @@ temperature: false
 tls: {nezha_tls}
 use_gitee_to_upgrade: false
 use_ipv6_country_code: false
-uuid: {UUID}"""
+UID: {UID}"""
             
-            with open(os.path.join(FILE_PATH, 'config.yaml'), 'w') as f:
+            with open(os.path.join(ILE_PATH, 'config.yaml'), 'w') as f:
                 f.write(config_yaml)
     
     # Generate configuration file
@@ -310,7 +310,7 @@ uuid: {UUID}"""
 
                 "clients": [{
 
-                    "id": UUID,
+                    "id": UID,
 
                     "flow": "xtls-rprx-vision",
 
@@ -362,7 +362,7 @@ uuid: {UUID}"""
 
                 "clients": [{
 
-                    "id": UUID
+                    "id": UID
 
                 }, ],
 
@@ -390,7 +390,7 @@ uuid: {UUID}"""
 
                 "clients": [{
 
-                    "id": UUID,
+                    "id": UID,
 
                     "level": 0
 
@@ -436,7 +436,7 @@ uuid: {UUID}"""
 
                 "clients": [{
 
-                    "id": UUID,
+                    "id": UID,
 
                     "alterId": 0
 
@@ -478,7 +478,7 @@ uuid: {UUID}"""
 
                 "clients": [{
 
-                    "password": UUID
+                    "password": UID
 
                 }, ]
 
@@ -527,14 +527,14 @@ uuid: {UUID}"""
     } 
 
 
-    with open(os.path.join(FILE_PATH, 'config.json'), 'w', encoding='utf-8') as config_file:
+    with open(os.path.join(ILE_PATH, 'config.json'), 'w', encoding='utf-8') as config_file:
         json.dump(config, config_file, ensure_ascii=False, indent=2)
     
     # Run nezha
     if NEZHA_SERVER and NEZHA_PORT and NEZHA_KEY:
         tls_ports = ['443', '8443', '2096', '2087', '2083', '2053']
         nezha_tls = '--tls' if NEZHA_PORT in tls_ports else ''
-        command = f"nohup {os.path.join(FILE_PATH, 'npm')} -s {NEZHA_SERVER}:{NEZHA_PORT} -p {NEZHA_KEY} {nezha_tls} >/dev/null 2>&1 &"
+        command = f"nohup {os.path.join(ILE_PATH, 'npm')} -s {NEZHA_SERVER}:{NEZHA_PORT} -p {NEZHA_KEY} {nezha_tls} >/dev/null 2>&1 &"
         
         try:
             exec_cmd(command)
@@ -545,7 +545,7 @@ uuid: {UUID}"""
     
     elif NEZHA_SERVER and NEZHA_KEY:
         # Run V1
-        command = f"nohup {FILE_PATH}/php -c \"{FILE_PATH}/config.yaml\" >/dev/null 2>&1 &"
+        command = f"nohup {ILE_PATH}/php -c \"{ILE_PATH}/config.yaml\" >/dev/null 2>&1 &"
         try:
             exec_cmd(command)
             print('php is running')
@@ -556,7 +556,7 @@ uuid: {UUID}"""
         print('NEZHA variable is empty, skipping running')
     
     # Run sbX
-    command = f"nohup {os.path.join(FILE_PATH, 'web')} -c {os.path.join(FILE_PATH, 'config.json')} >/dev/null 2>&1 &"
+    command = f"nohup {os.path.join(ILE_PATH, 'web')} -c {os.path.join(ILE_PATH, 'config.json')} >/dev/null 2>&1 &"
     try:
         exec_cmd(command)
         print('web is running')
@@ -565,16 +565,16 @@ uuid: {UUID}"""
         print(f"web running error: {e}")
     
     # Run cloudflared
-    if os.path.exists(os.path.join(FILE_PATH, 'bot')):
+    if os.path.exists(os.path.join(ILE_PATH, 'bot')):
         if re.match(r'^[A-Z0-9a-z=]{120,250}$', RGO_AUTH):
             args = f"tunnel --edge-ip-version auto --no-autoupdate --protocol http2 run --token {RGO_AUTH}"
         elif "TunnelSecret" in RGO_AUTH:
-            args = f"tunnel --edge-ip-version auto --config {os.path.join(FILE_PATH, 'tunnel.yml')} run"
+            args = f"tunnel --edge-ip-version auto --config {os.path.join(ILE_PATH, 'tunnel.yml')} run"
         else:
-            args = f"tunnel --edge-ip-version auto --no-autoupdate --protocol http2 --logfile {os.path.join(FILE_PATH, 'boot.log')} --loglevel info --url http://localhost:{RGO_PORT}"
+            args = f"tunnel --edge-ip-version auto --no-autoupdate --protocol http2 --logfile {os.path.join(ILE_PATH, 'boot.log')} --loglevel info --url http://localhost:{RGO_PORT}"
         
         try:
-            exec_cmd(f"nohup {os.path.join(FILE_PATH, 'bot')} {args} >/dev/null 2>&1 &")
+            exec_cmd(f"nohup {os.path.join(ILE_PATH, 'bot')} {args} >/dev/null 2>&1 &")
             print('bot is running')
             time.sleep(2)
         except Exception as e:
@@ -623,8 +623,8 @@ async def extract_domains():
                     pass
                 
                 time.sleep(1)
-                args = f'tunnel --edge-ip-version auto --no-autoupdate --protocol http2 --logfile {FILE_PATH}/boot.log --loglevel info --url http://localhost:{RGO_PORT}'
-                exec_cmd(f'nohup {os.path.join(FILE_PATH, "bot")} {args} >/dev/null 2>&1 &')
+                args = f'tunnel --edge-ip-version auto --no-autoupdate --protocol http2 --logfile {ILE_PATH}/boot.log --loglevel info --url http://localhost:{RGO_PORT}'
+                exec_cmd(f'nohup {os.path.join(ILE_PATH, "bot")} {args} >/dev/null 2>&1 &')
                 print('bot is running.')
                 time.sleep(6)  # Wait 6 seconds
                 await extract_domains()  # Try again
@@ -633,15 +633,15 @@ async def extract_domains():
 
 # Upload nodes to subscription service
 def upload_nodes():
-    if UPLOAD_URL and PROJECT_URL:
-        subscription_url = f"{PROJECT_URL}/{SUB_PATH}"
+    if PLOAD_URL and PROJECT_URL:
+        subscription_url = f"{PROJECT_URL}/{UB_PATH}"
         json_data = {
             "subscription": [subscription_url]
         }
         
         try:
             response = requests.post(
-                f"{UPLOAD_URL}/api/add-subscriptions",
+                f"{PLOAD_URL}/api/add-subscriptions",
                 json=json_data,
                 headers={"Content-Type": "application/json"}
             )
@@ -651,7 +651,7 @@ def upload_nodes():
         except Exception as e:
             pass
     
-    elif UPLOAD_URL:
+    elif PLOAD_URL:
         if not os.path.exists(list_path):
             return
         
@@ -667,7 +667,7 @@ def upload_nodes():
         
         try:
             response = requests.post(
-                f"{UPLOAD_URL}/api/add-nodes",
+                f"{PLOAD_URL}/api/add-nodes",
                 data=json_data,
                 headers={"Content-Type": "application/json"}
             )
@@ -686,7 +686,7 @@ def send_telegram():
         return
     
     try:
-        with open(sub_path, 'r') as f:
+        with open(UB_PATH, 'r') as f:
             message = f.read()
         
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -716,26 +716,26 @@ async def generate_links(RGO_DOMAIN):
         ISP = f"{country_code}_{isp}"
 
     time.sleep(2)
-    VMESS = {"v": "2", "ps": f"{ISP}", "add": FIP, "port": FPORT, "id": UUID, "aid": "0", "scy": "none", "net": "ws", "type": "none", "host": RGO_DOMAIN, "path": "/vmess-argo?ed=2560", "tls": "tls", "sni": RGO_DOMAIN, "alpn": "", "fp": "chrome"}
+    VMESS = {"v": "2", "ps": f"{ISP}", "add": FIP, "port": FPORT, "id": UID, "aid": "0", "scy": "none", "net": "ws", "type": "none", "host": RGO_DOMAIN, "path": "/vmess-argo?ed=2560", "tls": "tls", "sni": RGO_DOMAIN, "alpn": "", "fp": "chrome"}
  
     list_txt = f"""
-vless://{UUID}@{FIP}:{FPORT}?encryption=none&security=tls&sni={RGO_DOMAIN}&fp=chrome&type=ws&host={RGO_DOMAIN}&path=%2Fvless-argo%3Fed%3D2560#{ISP}
+vless://{UID}@{FIP}:{FPORT}?encryption=none&security=tls&sni={RGO_DOMAIN}&fp=chrome&type=ws&host={RGO_DOMAIN}&path=%2Fvless-argo%3Fed%3D2560#{ISP}
   
 vmess://{ base64.b64encode(json.dumps(VMESS).encode('utf-8')).decode('utf-8')}
 
-trojan://{UUID}@{FIP}:{FPORT}?security=tls&sni={RGO_DOMAIN}&fp=chrome&type=ws&host={RGO_DOMAIN}&path=%2Ftrojan-argo%3Fed%3D2560#{ISP}
+trojan://{UID}@{FIP}:{FPORT}?security=tls&sni={RGO_DOMAIN}&fp=chrome&type=ws&host={RGO_DOMAIN}&path=%2Ftrojan-argo%3Fed%3D2560#{ISP}
     """
     
-    with open(os.path.join(FILE_PATH, 'list.txt'), 'w', encoding='utf-8') as list_file:
+    with open(os.path.join(ILE_PATH, 'list.txt'), 'w', encoding='utf-8') as list_file:
         list_file.write(list_txt)
 
     sub_txt = base64.b64encode(list_txt.encode('utf-8')).decode('utf-8')
-    with open(os.path.join(FILE_PATH, 'sub.txt'), 'w', encoding='utf-8') as sub_file:
+    with open(os.path.join(ILE_PATH, 'sub.txt'), 'w', encoding='utf-8') as sub_file:
         sub_file.write(sub_txt)
         
     print(sub_txt)
     
-    print(f"{FILE_PATH}/sub.txt saved successfully")
+    print(f"{ILE_PATH}/sub.txt saved successfully")
     
     # Additional actions
     send_telegram()
@@ -745,7 +745,7 @@ trojan://{UUID}@{FIP}:{FPORT}?security=tls&sni={RGO_DOMAIN}&fp=chrome&type=ws&ho
  
 # Add automatic access task
 def add_visit_task():
-    if not AUTO_ACCESS or not PROJECT_URL:
+    if not UTO_ACCESS or not PROJECT_URL:
         print("Skipping adding automatic access task")
         return
     
