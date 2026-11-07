@@ -26,7 +26,7 @@ RGO_DOMAIN = os.environ.get('RGO_DOMAIN', '')        # Argo固定隧道域名,�
 RGO_AUTH = os.environ.get('RGO_AUTH', '')            # Argo固定隧道密钥,留空即使用临时隧道
 RGO_PORT = int(os.environ.get('RGO_PORT', '8001'))   # Argo端口,使用固定隧道token需在cloudflare后台设置端口和这里一致
 FIP = os.environ.get('FIP', 'spring.io')             # 优选ip或优选域名
-CFPORT = int(os.environ.get('CFPORT', '443'))          # 优选ip或优选域名对应端口
+FPORT = int(os.environ.get('FPORT', '443'))          # 优选ip或优选域名对应端口
 NAME = os.environ.get('NAME', '')                      # 节点名称
 CHAT_ID = os.environ.get('CHAT_ID', '')                # Telegram chat_id,推送节点到tg,两个变量同时填写才会推送
 BOT_TOKEN = os.environ.get('BOT_TOKEN', '')            # Telegram bot_token
@@ -716,14 +716,14 @@ async def generate_links(RGO_DOMAIN):
         ISP = f"{country_code}_{isp}"
 
     time.sleep(2)
-    VMESS = {"v": "2", "ps": f"{ISP}", "add": FIP, "port": CFPORT, "id": UUID, "aid": "0", "scy": "none", "net": "ws", "type": "none", "host": RGO_DOMAIN, "path": "/vmess-argo?ed=2560", "tls": "tls", "sni": RGO_DOMAIN, "alpn": "", "fp": "chrome"}
+    VMESS = {"v": "2", "ps": f"{ISP}", "add": FIP, "port": FPORT, "id": UUID, "aid": "0", "scy": "none", "net": "ws", "type": "none", "host": RGO_DOMAIN, "path": "/vmess-argo?ed=2560", "tls": "tls", "sni": RGO_DOMAIN, "alpn": "", "fp": "chrome"}
  
     list_txt = f"""
-vless://{UUID}@{FIP}:{CFPORT}?encryption=none&security=tls&sni={RGO_DOMAIN}&fp=chrome&type=ws&host={RGO_DOMAIN}&path=%2Fvless-argo%3Fed%3D2560#{ISP}
+vless://{UUID}@{FIP}:{FPORT}?encryption=none&security=tls&sni={RGO_DOMAIN}&fp=chrome&type=ws&host={RGO_DOMAIN}&path=%2Fvless-argo%3Fed%3D2560#{ISP}
   
 vmess://{ base64.b64encode(json.dumps(VMESS).encode('utf-8')).decode('utf-8')}
 
-trojan://{UUID}@{FIP}:{CFPORT}?security=tls&sni={RGO_DOMAIN}&fp=chrome&type=ws&host={RGO_DOMAIN}&path=%2Ftrojan-argo%3Fed%3D2560#{ISP}
+trojan://{UUID}@{FIP}:{FPORT}?security=tls&sni={RGO_DOMAIN}&fp=chrome&type=ws&host={RGO_DOMAIN}&path=%2Ftrojan-argo%3Fed%3D2560#{ISP}
     """
     
     with open(os.path.join(FILE_PATH, 'list.txt'), 'w', encoding='utf-8') as list_file:
