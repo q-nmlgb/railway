@@ -7,5 +7,5 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     chmod +x app.py && \
     pip install --no-cache-dir -r requirements.txt
-EXPOSE 3000
+EXPOSE 5000
 CMD ["python", "app.py"]
