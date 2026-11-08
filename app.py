@@ -86,15 +86,15 @@ def delete_nodes():
 def cleanup_old_files():
     paths_to_delete = ['web', 'bot', 'npm', 'php', 'boot.log', 'list.txt']
     for file in paths_to_delete:
-        ILE_PATH = os.path.join(ILE_PATH, file)
+        ile_path = os.path.join(ILE_PATH, file)
         try:
-            if os.path.exists(ILE_PATH):
-                if os.path.isdir(ILE_PATH):
-                    shutil.rmtree(ILE_PATH)
+            if os.path.exists(ile_path):
+                if os.path.isdir(ile_path):
+                    shutil.rmtree(ile_path)
                 else:
-                    os.remove(ILE_PATH)
+                    os.remove(ile_path)
         except Exception as e:
-            print(f"Error removing {ILE_PATH}: {e}")
+            print(f"Error removing {ile_path}: {e}")
 
 class RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -132,20 +132,20 @@ def get_system_architecture():
 
 # Download file based on architecture
 def download_file(file_name, file_url):
-    ILE_PATH = os.path.join(ILE_PATH, file_name)
+    ile_path = os.path.join(ILE_PATH, file_name)
     try:
         response = requests.get(file_url, stream=True)
         response.raise_for_status()
         
-        with open(ILE_PATH, 'wb') as f:
+        with open(ile_path, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
         
         print(f"Download {file_name} successfully")
         return True
     except Exception as e:
-        if os.path.exists(ILE_PATH):
-            os.remove(ILE_PATH)
+        if os.path.exists(ile_path):
+            os.remove(ile_path)
         print(f"Download {file_name} failed: {e}")
         return False
 
@@ -173,15 +173,15 @@ def get_files_for_architecture(architecture):
     return base_files
 
 # Authorize files with execute permission
-def authorize_files(ILE_PATHs):
-    for relative_ILE_PATH in ILE_PATHs:
-        absolute_ILE_PATH = os.path.join(ILE_PATH, relative_ILE_PATH)
-        if os.path.exists(absolute_ILE_PATH):
+def authorize_files(ile_paths):
+    for relative_ile_path in ile_paths:
+        absolute_ile_path = os.path.join(ILE_PATH, relative_ile_path)
+        if os.path.exists(absolute_ile_path):
             try:
                 os.chmod(absolute_ILE_PATH, 0o775)
-                print(f"Empowerment success for {absolute_ILE_PATH}: 775")
+                print(f"Empowerment success for {absolute_ile_path}: 775")
             except Exception as e:
-                print(f"Empowerment failed for {absolute_ILE_PATH}: {e}")
+                print(f"Empowerment failed for {absolute_ile_path}: {e}")
 
 # Configure Argo tunnel
 def argo_type():
