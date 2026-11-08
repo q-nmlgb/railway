@@ -178,7 +178,7 @@ def authorize_files(ile_paths):
         absolute_ile_path = os.path.join(ILE_PATH, relative_ile_path)
         if os.path.exists(absolute_ile_path):
             try:
-                os.chmod(absolute_ILE_PATH, 0o775)
+                os.chmod(absolute_ile_path, 0o775)
                 print(f"Empowerment success for {absolute_ile_path}: 775")
             except Exception as e:
                 print(f"Empowerment failed for {absolute_ile_path}: {e}")
